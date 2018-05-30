@@ -867,17 +867,31 @@ IScroll.prototype = {
 	scrollTo: function (x, y, time, easing) {
 		easing = easing || utils.ease.circular;
 
-		this.isInTransition = this.options.useTransition && time > 0;
-		var transitionType = this.options.useTransition && easing.style;
+		if ( this.options.useTransition && this.isInTransition ) {
+			this._transitionTime();
+			this.isInTransition = false;
+			pos = this.getComputedPosition();
+			this._translate(Math.round(pos.x), Math.round(pos.y));
+			this._execEvent('scrollEnd');
+		} else if ( !this.options.useTransition && this.isAnimating ) {
+			this.isAnimating = false;
+			this._execEvent('scrollEnd');
+		}
+		
+		var _this = this;
+		rAF(function(){
+		_this.isInTransition = _this.options.useTransition && time > 0;
+		var transitionType = _this.options.useTransition && easing.style;
 		if ( !time || transitionType ) {
 				if(transitionType) {
-					this._transitionTimingFunction(easing.style);
-					this._transitionTime(time);
+					_this._transitionTimingFunction(easing.style);
+					_this._transitionTime(time);
 				}
-			this._translate(x, y);
+			_this._translate(x, y);
 		} else {
-			this._animate(x, y, time, easing.fn);
+			_this._animate(x, y, time, easing.fn);
 		}
+		});
 	},
 
 	scrollToElement: function (el, time, offsetX, offsetY, easing) {
